@@ -226,13 +226,59 @@ Fudge 127.0.0.1 stratum 10
 ##### 主节点
 
 ```bash
-yum -y install python python3 epel-release gtk2 gtk2-devel polkit  rng-toolsyum -y install munge*#mungeecho -n "19971104"|sha1sum |cut -d' ' -f1>/etc/munge/munge.keychown munge:munge /etc/munge/munge.keysystemctl restart munge.servicesystemctl enable munge.service[root@mgt ~]# id mungeuid=988(munge) gid=981(munge) groups=981(munge)#slurmgroupadd -g 1001 slurmuseradd -u 1001 -g slurm slurm# 下载slurm安装包tar -xvf slurm.tar.cd slurm./configure && make && make installcp ./etc/{slurmctld.service,slurmdbd.service,slurmd.service} /usr/lib/systemd/systemmkdir /var/spool/slurm-llnlchown slurm:slurm /var/spool/slurm-llnl
+yum -y install python python3 epel-release gtk2 gtk2-devel polkit  rng-tools
+yum -y install munge*#mungeecho -n "XXX"|sha1sum |cut -d' ' -f1>/etc/munge/munge.key
+chown munge:munge /etc/munge/munge.key
+systemctl restart munge.service
+systemctl enable munge.service
+[root@mgt ~]# id munge
+uid=988(munge) gid=981(munge) groups=981(munge)
+#slurm
+groupadd -g 1001 slurm
+useradd -u 1001 -g slurm slurm
+
+# 下载slurm安装包
+tar -xvf slurm.tar.gz
+cd slurm
+./configure && make && make install
+cp ./etc/{slurmctld.service,slurmdbd.service,slurmd.service} /usr/lib/systemd/system
+mkdir /var/spool/slurm-llnl
+chown slurm:slurm /var/spool/slurm-llnl
 ```
 
 ##### 计算节点
 
 ```bash
-yum -y install python python3 epel-release gtk2 gtk2-devel polkit  rng-toolsyum -y install munge*# mungeecho -n "19971104"|sha1sum |cut -d' ' -f1>/etc/munge/munge.keychmod 400 /etc/munge/munge.key# 修改munge用户的UID和GID与主节点一致usermod -u  988  mungegroupmod -g 981  mungechown -R munge:munge /etc/munge/chmod 400 /etc/munge/munge.keychown -R munge:munge /var/run/mungechown -R munge:munge /var/lib/mungechown -R munge:munge /var/log/mungesystemctl restart munge.servicesystemctl enable munge.servicesystemctl status munge.service# slurmscp mgt:~/build/slurm-21.08.0-0rc1.tar.bz2 ./tar -xvf slurm-21.08.0-0rc1.tar.bz2cd slurm-21.08.0-0rc1./configure && make && make installcp ./etc/slurmd.service /usr/lib/systemd/systemgroupadd -g 1001 slurmuseradd -u 1001 -g slurm slurmscp mgt:/usr/local/etc/slurm.conf /usr/local/etc/chown slurm:slurm /usr/local/etc/slurm.confsystemctl daemon-reload && systemctl restart slurmd.servicesystemctl enable slurmd.service && systemctl status slurmd.servicescontrol update NodeName=node[01-30] State=RESUME
+yum -y install python python3 epel-release gtk2 gtk2-devel polkit  rng-tools
+yum -y install munge*
+# munge
+echo -n "XXX"|sha1sum |cut -d' ' -f1>/etc/munge/munge.keychmod 400 /etc/munge/munge.key
+# 修改munge用户的UID和GID与主节点一致
+usermod -u  988  munge
+groupmod -g 981  munge
+chown -R munge:munge /etc/munge/
+chmod 400 /etc/munge/munge.key
+chown -R munge:munge /var/run/munge
+chown -R munge:munge /var/lib/munge
+chown -R munge:munge /var/log/munge
+systemctl restart munge.service
+systemctl enable munge.service
+systemctl status munge.service
+# slurm
+scp mgt:~/build/slurm-21.08.0-0rc1.tar.bz2 ./
+tar -xvf slurm-21.08.0-0rc1.tar.bz2
+cd slurm-21.08.0-0rc1
+./configure && make && make install
+cp ./etc/slurmd.service /usr/lib/systemd/system
+groupadd -g 1001 slurm
+useradd -u 1001 -g slurm slurm
+scp mgt:/usr/local/etc/slurm.conf /usr/local/etc/
+chown slurm:slurm /usr/local/etc/slurm.conf
+systemctl daemon-reload && systemctl restart slurmd.service
+systemctl enable slurmd.service && systemctl status slurmd.service
+
+# 节点重启后需要手动上线
+scontrol update NodeName=node[01-30] State=RESUME
 ```
 
 
@@ -240,7 +286,20 @@ yum -y install python python3 epel-release gtk2 gtk2-devel polkit  rng-toolsyum 
 ##### 用户和用户组设置
 
 ```bash
-# 创建用户组[root@mgt ~]# groupadd guowy[root@mgt ~]# groupadd zhangj[root@mgt ~]# groupadd husq[root@mgt ~]# groupadd luxq# 新建用户useradd -d /home/guowy/wangzj -g guowy wangzjuseradd -d /home/husq/student_B -g husq student_Buseradd -d /home/luxq/student_A -g luxq student_Auseradd -d /home/zhangj/student_B -g zhangj student_B# 将用户添加到gaussian用户组gpasswd -a wangzj gaussian
+# 创建用户组
+[root@mgt ~]# groupadd guowy
+[root@mgt ~]# groupadd zhangj
+[root@mgt ~]# groupadd husq
+[root@mgt ~]# groupadd luxq
+
+# 新建用户
+useradd -d /home/guowy/wangzj -g guowy wangzj
+useradd -d /home/husq/student_A -g husq student_A
+useradd -d /home/luxq/student_B -g luxq student_B
+useradd -d /home/zhangj/student_C -g zhangj student_C
+
+# 将用户添加到gaussian用户组
+gpasswd -a wangzj gaussian
 ```
 
 
@@ -248,6 +307,39 @@ yum -y install python python3 epel-release gtk2 gtk2-devel polkit  rng-toolsyum 
 ##### `quota`磁盘限额
 
 ```bash
-#检查内核是否支持磁盘配额[root@io01 home]# grep CONFIG_QUOTA /boot/config-3.10.0-862.el7.x86_64CONFIG_QUOTA=yCONFIG_QUOTA_NETLINK_INTERFACE=y# CONFIG_QUOTA_DEBUG is not setCONFIG_QUOTA_TREE=yCONFIG_QUOTACTL=yCONFIG_QUOTACTL_COMPAT=y[root@io01 home]# yum install quota -y ... ...[root@io01 ~]# vi /etc/fstab#home 4TUUID=87e316e1-7775-43d2-93f7-e51fb2d9b802 /home ext4 defaults,usrquota,grpquota 0 0# 重新挂载硬盘，并启动quota服务[root@io01 ~]# mount -o remount /home[root@io01 ~]#quotaon -vug /home/dev/sdc [/home]: group quotas turned on/dev/sdc [/home]: user quotas turned on# 磁盘划分[root@io01 ~]# quota -vgs guowyDisk quotas for group guowy (gid 1002):     Filesystem   space   quota   limit   grace   files   quota   limit   grace       /dev/sdc   8108M   1055G   1055G            193k       0       0[root@io01 ~]# quota -vgs luxqDisk quotas for group luxq (gid 1005):     Filesystem   space   quota   limit   grace   files   quota   limit   grace       /dev/sdc      0K   1127G   1127G               0       0       0[root@io01 ~]# quota -vgs husqDisk quotas for group husq (gid 1004):     Filesystem   space   quota   limit   grace   files   quota   limit   grace       /dev/sdc      0K   1127G   1127G               0       0       0[root@io01 ~]# quota -vgs zhangjDisk quotas for group zhangj (gid 1008):     Filesystem   space   quota   limit   grace   files   quota   limit   grace       /dev/sdc      0K   1127G   1127G
+#检查内核是否支持磁盘配额
+[root@io01 home]# grep CONFIG_QUOTA /boot/config-3.10.0-862.el7.x86_64
+CONFIG_QUOTA=y
+CONFIG_QUOTA_NETLINK_INTERFACE=y
+# CONFIG_QUOTA_DEBUG is not set
+CONFIG_QUOTA_TREE=y
+CONFIG_QUOTACTL=y
+CONFIG_QUOTACTL_COMPAT=y
+[root@io01 home]# yum install quota -y
+[root@io01 ~]# vi /etc/fstab
+#home 4T
+UUID=87e316e1-7775-43d2-93f7-e51fb2d9b802 /home ext4 defaults,usrquota,grpquota 0 0
+# 重新挂载硬盘，并启动quota服务
+[root@io01 ~]# mount -o remount /home
+[root@io01 ~]#quotaon -vug /home
+/dev/sdc [/home]: group quotas turned on
+/dev/sdc [/home]: user quotas turned on
+# 磁盘划分
+[root@io01 ~]# quota -vgs guowy
+Disk quotas for group guowy (gid 1002):
+Filesystem   space   quota   limit   grace   files   quota   limit   grace
+  /dev/sdc   8108M   1055G   1055G            193k       0       0
+[root@io01 ~]# quota -vgs luxq
+Disk quotas for group luxq (gid 1005):
+Filesystem   space   quota   limit   grace   files   quota   limit   grace  
+  /dev/sdc      0K   1127G   1127G               0       0       0
+[root@io01 ~]# quota -vgs husq
+Disk quotas for group husq (gid 1004):
+Filesystem   space   quota   limit   grace   files   quota   limit   grace
+  /dev/sdc      0K   1127G   1127G               0       0       0
+[root@io01 ~]# quota -vgs zhangj
+Disk quotas for group zhangj (gid 1008):
+Filesystem   space   quota   limit   grace   files   quota   limit   grace
+  /dev/sdc      0K   1127G   1127G
 ```
 
