@@ -2,8 +2,6 @@
 
 系统版本`centos-7.5-x86_64-DVD-1804.iso`
 
-系统设置：关闭`selinux`和`firewall`
-
 `IB`驱动版本：`MLNX_OFED_LINUX-4.9-3.1.5.0-rhel7.5-x86_64`
 
 
@@ -169,17 +167,11 @@ Now you can run ypinit -s mgt on all slave server.
 
 NIS客户端:
 
-![image-20211114165736310](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20211114165736310.png)
-
-![image-20211114165807575](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20211114165807575.png)
-
-![image-20211114155829856](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20211114155829856.png)
-
 ```bash
 [root@node02 ~]yum -y install ypbind yp-tools rpcbind
 
 [root@node02 ~]setup
-# 按按上图所示进行设置
+# 添加nisdomain和主节点IP
 
 [root@node02 ~]# systemctl start ypbind
 [root@node02 ~]# systemctl start rpcbind
@@ -216,7 +208,16 @@ Fudge 127.0.0.1 stratum 10
 其他节点：
 
 ```bash
-# 安装依赖[root@node01 ~]# yum -y install ntp ntpdate# 添加ntp服务端ip[root@node01 ~]# vi /etc/ntp.confserver 192.168.1.1[root@node01 ~]# systemctl enable ntpd[root@node01 ~]# systemctl restart ntpd[root@node01 ~]# systemctl status ntpd[root@node01 ~]# ntpq -p     remote           refid      st t when poll reach   delay   offset  jitter============================================================================== mgt             203.107.6.88     3 u   18   64    1    0.266  39166.3   0.000  systemctl enable ntpd && systemctl restart ntpd && systemctl status ntpd
+# 安装依赖
+[root@node01 ~]# yum -y install ntp ntpdate
+# 添加ntp服务端ip
+[root@node01 ~]# vi /etc/ntp.confserver 192.168.1.1
+[root@node01 ~]# systemctl enable ntpd && systemctl restart ntpd && systemctl status ntpd
+[root@node01 ~]# ntpq -p
+     remote           refid      st t when poll reach   delay   offset  jitter
+==============================================================================
+mgt             203.107.6.88     3 u   18   64    1    0.266  39166.3   0.000  
+
 ```
 
 
