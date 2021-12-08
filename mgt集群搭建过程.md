@@ -211,7 +211,8 @@ Fudge 127.0.0.1 stratum 10
 # 安装依赖
 [root@node01 ~]# yum -y install ntp ntpdate
 # 添加ntp服务端ip
-[root@node01 ~]# vi /etc/ntp.confserver 192.168.1.1
+[root@node01 ~]# vi /etc/ntp.conf
+server 192.168.1.1
 [root@node01 ~]# systemctl enable ntpd && systemctl restart ntpd && systemctl status ntpd
 [root@node01 ~]# ntpq -p
      remote           refid      st t when poll reach   delay   offset  jitter
